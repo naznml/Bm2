@@ -3255,3 +3255,102 @@
         </div>
       </div>
     </section>
+
+    <footer class="content-block" style="margin-top: 30px;">
+      <div class="section-kicker">Аяқталды</div>
+      <h3>Жауапкершілігі шектеулі және қосымша жауапкершілігі бар серіктестіктер туралы</h3>
+      <p>
+        Бұл нұсқада тест бөлімдерінің нәтижесін шығару үшін JavaScript толық қосылды.
+        Әр бөлімдегі «Нәтижені көрсету» батырмасы дұрыс жауаптарды жасыл түспен,
+        қате белгіленген жауаптарды қызыл түспен көрсетеді.
+      </p>
+    </footer>
+  </div>
+
+  <a class="floating-up" href="#top" aria-label="Жоғары көтерілу">↑</a>
+
+  <script>
+    function normalizeAnswers(answerString) {
+      return String(answerString || '')
+        .split(',')
+        .map(function(item) { return item.trim(); })
+        .filter(Boolean)
+        .sort();
+    }
+
+    function getSelectedAnswers(question) {
+      return Array.prototype.slice
+        .call(question.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(function(input) { return input.value.trim(); })
+        .sort();
+    }
+
+    function arraysEqual(first, second) {
+      if (first.length !== second.length) return false;
+      for (var i = 0; i < first.length; i++) {
+        if (first[i] !== second[i]) return false;
+      }
+      return true;
+    }
+
+    function checkSection(testId) {
+      var testBox = document.querySelector('[data-test="' + testId + '"]');
+      var resultPanel = document.getElementById('result-' + testId);
+      if (!testBox || !resultPanel) return;
+
+      var questions = Array.prototype.slice.call(testBox.querySelectorAll('.question'));
+      var correctCount = 0;
+
+      questions.forEach(function(question) {
+        var correctAnswers = normalizeAnswers(question.getAttribute('data-answer'));
+        var selectedAnswers = getSelectedAnswers(question);
+        var options = Array.prototype.slice.call(question.querySelectorAll('.option'));
+
+        question.classList.add('checked');
+
+        options.forEach(function(option) {
+          option.classList.remove('correct', 'wrong');
+          var input = option.querySelector('input[type="checkbox"]');
+          if (!input) return;
+
+          var value = input.value.trim();
+          var isCorrect = correctAnswers.indexOf(value) !== -1;
+          var isSelected = selectedAnswers.indexOf(value) !== -1;
+
+          if (isCorrect) option.classList.add('correct');
+          if (isSelected && !isCorrect) option.classList.add('wrong');
+        });
+
+        if (arraysEqual(correctAnswers, selectedAnswers)) {
+          correctCount++;
+        }
+      });
+
+      var total = questions.length;
+      var percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+      var resultText = resultPanel.querySelector('.result-text');
+
+      if (resultText) {
+        resultText.textContent = correctCount + ' / ' + total + ' дұрыс жауап · ' + percent + '%';
+      }
+
+      resultPanel.classList.add('show');
+      resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var buttons = Array.prototype.slice.call(document.querySelectorAll('.test-box .btn-primary'));
+      buttons.forEach(function(button) {
+        var testBox = button.closest('.test-box');
+        if (!testBox) return;
+        var testId = testBox.getAttribute('data-test');
+        if (!testId) return;
+        button.addEventListener('click', function(event) {
+          event.preventDefault();
+          checkSection(testId);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
